@@ -10,8 +10,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>PPP Kedungwungu - Admin</title>
-	<meta name="description" content="PPP Kedungwungu">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="PPP Kedungwungu">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	
     <link rel="apple-touch-icon" href="apple-icon.png">
     <link rel="shortcut icon" href="favicon.ico">
@@ -206,6 +206,22 @@
 
         </header><!-- /header -->
         <!-- Header-->
+		
+		<!-- Modal Tambah Data -->
+			<div class="modal fade" id="addModal" tabindex="-1" role="dialog">
+			  <div class="modal-dialog" role="document">
+				<form id="addForm" class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title">Tambah Data</h5>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				  </div>
+				  <div class="modal-body row" id="addFields"></div>
+				  <div class="modal-footer">
+					<button type="submit" class="btn btn-primary">Simpan</button>
+				  </div>
+				</form>
+			  </div>
+			</div>
 
         <div class="container-fluid content mt-3">
 			<div class="animated fadeIn">
@@ -215,6 +231,7 @@
                         <div class="card">
                             <div class="card-header" >
                                 <strong class="card-title">Data Pembeli</strong>
+								
                             </div>
                             <div class="card-body table-responsive">
 								<div class="table-responsive">
@@ -282,21 +299,7 @@
 			  </div>
 			<button class="btn btn-success mb-3" data-toggle="modal" data-target="#addModal">Tambah Data</button>
 
-			<!-- Modal Tambah Data -->
-			<div class="modal fade" id="addModal" tabindex="-1" role="dialog">
-			  <div class="modal-dialog" role="document">
-				<form id="addForm" class="modal-content">
-				  <div class="modal-header">
-					<h5 class="modal-title">Tambah Data</h5>
-					<button type="button" class="close" data-dismiss="modal">&times;</button>
-				  </div>
-				  <div class="modal-body row" id="addFields"></div>
-				  <div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Simpan</button>
-				  </div>
-				</form>
-			  </div>
-			</div>
+			
         
 		</div> <!-- .content -->
 		
@@ -344,97 +347,200 @@
 
 
 	<script>
-	
-	  const sheetURL = 'https://script.google.com/macros/s/AKfycbzlOY5vwhf05bG70caTCsRob5zm6HQgW28GvqahCUY32jsfV9PbwacbaV8Rg1p53CWGrA/exec';
+	const sheetURL = 'https://script.google.com/macros/s/AKfycbzlOY5vwhf05bG70caTCsRob5zm6HQgW28GvqahCUY32jsfV9PbwacbaV8Rg1p53CWGrA/exec';
 
-	  let table;
-	  let rowData = [];
-		
-	  // Ambil data dan tampilkan di tabel
+	let table;
+	let rowData = [];
+
+	// Ambil data dan tampilkan di tabel
+	fetch(sheetURL)
+	  .then(res => res.json())
+	  .then(data => {
+		rowData = data;
+		const tbody = document.querySelector("#dataTable tbody");
+
+		data.forEach((row, index) => {
+		  const tr = document.createElement("tr");
+		  tr.dataset.index = index;
+		  tr.innerHTML = `
+			<td>${row.NO}</td>
+			<td>${row.IDPEMBELI}</td>
+			<td>${row.NAMA}</td>
+			<td>${row.NOMORIDENTITAS}</td>
+			<td>${row.BLOK}</td>
+			<td>${row.RT}</td>
+			<td>${row.RW}</td>
+			<td>${row.DESA}</td>
+			<td>${row.KECAMATAN}</td>
+			<td>${row.KABUPATEN}</td>
+			<td>${row.NOHP}</td>
+			<td>${row.NOHP2}</td>
+			<td>${row.EMAIL}</td>
+			<td>
+			  <button class="btn btn-sm btn-primary editBtn" data-toggle="modal" data-target="#editModal" data-index="${index}">Edit</button>
+			  <button class="btn btn-sm btn-danger deleteBtn" data-toggle="modal" data-target="#deleteModal" data-index="${index}">Hapus</button>
+			</td>
+		  `;
+		  tbody.appendChild(tr);
+		});
+
+		table = $('#dataTable').DataTable({
+		  pageLength: 10,
+		  dom: 'Bflrtip',
+		  buttons: ['excelHtml5'],
+		  language: {
+			search: "Cari:",
+			lengthMenu: "Tampilkan _MENU_ data",
+			info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+			zeroRecords: "Tidak ada data ditemukan",
+			infoEmpty: "Menampilkan 0 sampai 0 dari 0 data"
+		  }
+		});
+	  })
+	  .catch(error => console.error('Gagal fetch data:', error));
+
+
+	// Tampilkan form input otomatis
+	document.addEventListener('DOMContentLoaded', () => {
 	  fetch(sheetURL)
 		.then(res => res.json())
 		.then(data => {
-		  rowData = data;
-		  const tbody = document.querySelector("#dataTable tbody");
+		  const thirdRow = data[2];
+		  const keys = Object.keys(thirdRow);
+		  const filteredKeys = keys.filter(key => key !== 'NO' && key !== 'IDPEMBELI');
 
-		  data.forEach((row, index) => {
-			const tr = document.createElement("tr");
-			tr.dataset.index = index;
-			tr.innerHTML = `
-			  <td>${row.NO}</td>
-			  <td>${row.IDPEMBELI}</td>
-			  <td>${row.NAMA}</td>
-			  <td>${row.NOMORIDENTITAS}</td>
-			  <td>${row.BLOK}</td>
-			  <td>${row.RT}</td>
-			  <td>${row.RW}</td>
-			  <td>${row.DESA}</td>
-			  <td>${row.KECAMATAN}</td>
-			  <td>${row.KABUPATEN}</td>
-			  <td>${row.NOHP}</td>
-			  <td>${row.NOHP2}</td>
-			  <td>${row.EMAIL}</td>
-			  <td>
-				<button class="btn btn-sm btn-primary editBtn" data-toggle="modal" data-target="#editModal" data-index="${index}">Edit</button>
-                <button class="btn btn-sm btn-danger deleteBtn" data-toggle="modal" data-target="#deleteModal" data-index="${index}">Hapus</button>
-				</td>
-			`;
-			tbody.appendChild(tr);
-		  });
+		  filteredKeys.forEach(key => {
+			let inputElement = '';
 
-		  // Inisialisasi DataTables	
-			table = $('#dataTable').DataTable({
-			pageLength: 10,
-			dom: 'Bflrtip',
-			buttons: ['excelHtml5'],
-			language: {
-			  search: "Cari:",
-			  lengthMenu: "Tampilkan _MENU_ data",
-			  info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-			  zeroRecords: "Tidak ada data ditemukan",
-			  infoEmpty: "Menampilkan 0 sampai 0 dari 0 data"
+			switch (key) {
+			  case 'EMAIL':
+				inputElement = `<input type="email" name="${key}" class="form-control" placeholder="contoh@email.com" required />`;
+				break;
+			  case 'NOHP':
+			  case 'NOHP2':
+				inputElement = `<input type="tel" name="${key}" class="form-control" placeholder="+628123456789" required />`;
+				break;
+			  case 'NOMORIDENTITAS':
+				inputElement = `<input type="number" name="${key}" class="form-control" placeholder="16 digit KTP/NIK" required />`;
+				break;
+			  case 'RT':
+			  case 'RW':
+				inputElement = `<input type="number" name="${key}" class="form-control" placeholder="001" required min="1" max="999" />`;
+				break;
+				
+			  case 'DOKUMEN':
+				inputElement = `<input type="file" name="${key}" class="form-control-file" />`;
+				break;
+			
+			  case 'KECAMATAN':
+			  inputElement = `
+				  <select name="${key}" class="form-control" required>
+					<option value="">-- Pilih ${key} --</option>
+					<option value="Anjatan">Anjatan</option>
+					<option value="Haurgelis">Haurgelis</option>
+					<option value="Patrol">Patrol</option>
+				  </select>`;
+				break;
+			  case 'KABUPATEN':
+				inputElement = `
+				  <select name="${key}" class="form-control" required>
+					<option value="">-- Pilih ${key} --</option>
+					<option value="Indramayu">Indramayu</option>
+					<option value="Subang">Subang</option>
+					
+				  </select>`;
+				break;
+			  default:
+				inputElement = `<input type="text" name="${key}" class="form-control" required />`;
 			}
+
+			$('#addFields').append(`
+			  <div class="form-group col-12 col-md-6">
+				<label>${key}</label>
+				${inputElement}
+			  </div>
+			`);
 		  });
+		});
+	});
+
+
+	// Submit form tambah data
+	$('#addForm').on('submit', function (e) {
+	  e.preventDefault();
+
+	  const formData = new FormData(this);
+	  let valid = true;
+	  let errorMessage = "";
+
+	  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	  const phoneRegex = /^(\+62|08)[0-9]{9,13}$/;
+
+	  for (let [name, value] of formData.entries()) {
+		if (name === 'DOKUMEN') {
+		  const file = $('input[name="DOKUMEN"]')[0].files[0];
+		  if (file && file.size > 10 * 1024 * 1024) { // max 10MB
+			valid = false;
+			errorMessage = `Ukuran dokumen terlalu besar (maksimal 10MB).`;
+			break;
+		  }
+		  continue; // skip validation for file
+		}
+
+		if (!value.trim()) {
+		  valid = false;
+		  errorMessage = `Kolom "${name}" wajib diisi.`;
+		  break;
+		}
+
+		if (name === 'EMAIL' && !emailRegex.test(value)) {
+		  valid = false;
+		  errorMessage = `Format email tidak valid.`;
+		  break;
+		}
+
+		if ((name === 'NOHP' || name === 'NOHP2') && !phoneRegex.test(value)) {
+		  valid = false;
+		  errorMessage = `Nomor HP di kolom "${name}" tidak valid (Gunakan +62 atau 08).`;
+		  break;
+		}
+
+		if (name === 'NOMORIDENTITAS' && !/^[0-9]{12,20}$/.test(value)) {
+		  valid = false;
+		  errorMessage = `NOMORIDENTITAS harus berupa angka 12–20 digit.`;
+		  break;
+		}
+
+		if ((name === 'RT' || name === 'RW') && !/^[0-9]{1,3}$/.test(value)) {
+		  valid = false;
+		  errorMessage = `Kolom ${name} harus berupa angka 1-3 digit.`;
+		  break;
+		}
+	  }
+
+	  if (!valid) {
+		alert(errorMessage);
+		return;
+	  }
+
+	  // Tambahkan NO dan IDPEMBELI ke FormData
+	  const nextNo = rowData.length + 1;
+	  formData.append("NO", nextNo.toString());
+	  formData.append("IDPEMBELI", "P" + String(nextNo).padStart(3, '0'));
+
+	  fetch(sheetURL, {
+		method: 'POST',
+		body: formData,
+	  })
+		.then(res => res.json())
+		.then(response => {
+		  alert('✅ Data berhasil ditambahkan');
+		  location.reload();
 		})
-		.catch(error => console.error('Gagal fetch data:', error));
-		
-		// Tampilkan form tambah otomatis berdasarkan field dari baris pertama
-		document.addEventListener('DOMContentLoaded', () => {
-		  fetch(sheetURL)
-			.then(res => res.json())
-			.then(data => {
-			  const firstRow = data[0];
-			  Object.keys(firstRow).forEach(key => {
-				$('#addFields').append(`
-				  <div class="form-group col-12 col-md-6">
-					<label>${key}</label>
-					<input name="${key}" class="form-control" />
-				  </div>
-				`);
-			  });
-			});
-		});
-
-		// Handle tambah data
-		$('#addForm').on('submit', function (e) {
-		  e.preventDefault();
-		  const formData = {};
-		  $(this).serializeArray().forEach(item => {
-			formData[item.name] = item.value;
-		  });
-
-		  fetch(sheetURL, {
-			method: 'POST',
-			body: JSON.stringify(formData),
-		  })
-		  .then(res => res.json())
-		  .then(response => {
-			alert('Data berhasil ditambahkan');
-			location.reload(); // atau perbarui tabel tanpa reload
-		  })
-		  .catch(err => alert('Gagal tambah data'));
-		});
-
+		.catch(err => alert('❌ Gagal tambah data'));
+	});
+	
+	
 		// Handle tombol Edit
 		$(document).on('click', '.editBtn', function () {
 		  const index = $(this).data('index');
